@@ -1,0 +1,26 @@
+# /etc/apache2/sites-available/roundcube.conf
+
+<VirtualHost *:90>
+    ServerName postfix.ais-simplon-lil.cloudns.ph:90   # Remplacez par le nom de domaine de votre serveur mail
+
+    Redirect permanent "/" "https://www.postfix-maxime.com"
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName postfix.ais-simplon-lil.cloudns.ph:443   # Remplacez par le nom de domaine de votre serveur mail
+
+    DocumentRoot /var/www/html/roundcube
+
+    <Directory /var/www/html/roundcube>
+        Options FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+    SSLEngine on
+    SSLCertificateFile /etc/ssl/certs/ssl-cert-snakeoil.pem
+    SSLCertificateKeyFile /etc/ssl/private/ssl-cert-snakeoil.key
+</VirtualHost>

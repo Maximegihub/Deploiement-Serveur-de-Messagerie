@@ -1,0 +1,20 @@
+<?php
+// /etc/roundcube/config.inc.php
+
+$config = array();
+
+$config['db_dsnw'] = 'mysql://roundcube_root:123456@localhost/roundcube_db';
+
+$config['default_host'] = 'ssl://postfix.ais-simplon-lil.cloudns.ph';
+$config['smtp_server'] = 'ssl://postfix.ais-simplon-lil.cloudns.ph';
+$config['smtp_user'] = '%u';
+$config['smtp_pass'] = '%p';
+
+$config['support_url'] = 'http://postfix.ais-simplon-lil.cloudns.ph';
+$config['product_name'] = 'Webmail';
+
+$config['des_key'] = 'ajoutez_un_des_key_aleatoire';
+
+$config['plugins'] = array('archive', 'zipdownload', 'password', 'managesieve');
+
+$config['skin'] = 'elastic';

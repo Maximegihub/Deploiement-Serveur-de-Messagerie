@@ -1,0 +1,123 @@
+---
+- name: Installer Postfix et Dovecot
+  hosts: mail.servers   # Remplacez par le nom d'hôte ou l'adresse IP de votre serveur
+  become: yes
+  become_method: su
+  tasks:
+    - name: Mise à jour des paquets
+      apt:
+        update_cache: yes
+
+    - name: Installation de Postfix et Dovecot
+      apt:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - postfix
+        - dovecot-imapd
+        - dovecot-pop3d
+
+    - name: Copie de la configuration de Postfix
+      template:
+        src: postfix/main.cf.j2
+        dest: /etc/postfix/main.cf
+     # notify: restart postfix
+
+    - name: Copie de la configuration de Dovecot
+      template:
+        src: dovecot/dovecot.conf.j2
+        dest: /etc/dovecot/dovecot.conf
+     # notify: restart dovecot
+    
+    - name: Installation d'Apache, PHP et le module SSL
+      apt:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - apache2
+        - php
+        - libapache2-mod-php
+        - python3-certbot-apache   # Pour le module SSL Let's Encrypt
+
+    - name: Apache modules
+      apache2_module:
+        name: "{{ item }}"
+	state: present
+      with_items:
+	- rewrite
+	- headers
+	- deflate
+	- ssl
+
+    - name: Activer le module SSL
+      ansible.builtin.shell: a2enmod ssl
+    
+    - name: Copie de la configuration de l'hôte virtuel Roundcube
+      template:
+         src: apache/roundcube.conf.j2
+         dest: /etc/apache2/sites-available/roundcube.conf
+     # notify: restart apache
+   
+    - name: Créer un hôte virtuel pour Roundcube
+      blockinfile:
+        path: /etc/apache2/sites-available/roundcube.conf
+        content: |
+          <VirtualHost *:90>
+              ServerName postfix.ais-simplon-lil.cloudns.ph:90   # Remplacez par le nom de domaine de votre serveur mail
+
+              Redirect permanent "/" "https://www.postfix-maxime.com/"
+          </VirtualHost>
+
+          <VirtualHost *:443>
+              ServerName postfix.ais-simplon-lil.cloudns.ph   # Remplacez par le nom de domaine de votre serveur mail
+
+              DocumentRoot /var/www/html/roundcube
+
+              <Directory /var/www/html/roundcube>
+                  Options FollowSymLinks
+                  AllowOverride All
+                  Require all granted
+              </Directory>
+
+              ErrorLog ${APACHE_LOG_DIR}/error.log
+              CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+              SSLEngine on
+              SSLCertificateFile /etc/ssl/certs/ssl-cert-snakeoil.pem
+              SSLCertificateKeyFile /etc/ssl/private/ssl-cert-snakeoil.key
+          </VirtualHost>
+     #  notify: restart apache
+
+    - name: Activer le nouvel hôte virtuel
+      ansible.builtin.shell: a2ensite roundcube.conf
+
+- name: Installer Roundcube
+  hosts: webmail.servers   # Remplacez par le nom d'hôte ou l'adresse IP de votre serveur web
+  become: yes
+  tasks:
+
+    - name: Mise à jour des paquets
+      apt:
+        update_cache: yes
+
+    - name: Installation de Roundcube
+      apt:
+        name: roundcube
+        state: present
+
+    - name: Copie de la configuration de Roundcube
+      template:
+        src: roundcube/config.inc.php.j2
+        dest: /etc/roundcube/config.inc.php.j2
+
+    - name: Réglage des permissions pour Roundcube
+      file:
+        path: /var/lib/roundcube/
+        state: directory
+        owner: www-data
+        group: www-data
+
+    - name: Redémarrage d'Apache
+      service:
+        name: apache2
+        state: started

@@ -1,0 +1,16 @@
+# /etc/postfix/main.cf
+
+# Nom de domaine de votre serveur mail
+myhostname = postfix.ais-simplon-lil.cloudns.ph
+
+# Autoriser la remise locale des emails
+mydestination = localhost
+
+# Réseaux locaux autorisés
+mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
+
+# Type de boîte aux lettres utilisée
+mailbox_command =
+
+# Répertoire des boîtes aux lettres
+home_mailbox = Maildir/

@@ -1,0 +1,12 @@
+# /etc/dovecot/dovecot.conf
+
+protocols = imap pop3
+
+# Localisation des boîtes aux lettres
+mail_location = maildir:~/Maildir
+
+# Autoriser l'authentification sans SSL (pour l'exemple seulement, recommandé d'utiliser SSL en production)
+disable_plaintext_auth = no
+
+# Authentification des utilisateurs
+auth_mechanisms = plain login
